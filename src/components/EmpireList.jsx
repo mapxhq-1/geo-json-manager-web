@@ -147,21 +147,21 @@ const EmpireList = ({ onSelect }) => {
 									<th className="border px-2 py-1">Empire Name</th>
 									<th className="border px-2 py-1">Start Year</th>
 									<th className="border px-2 py-1">End Year</th>
-									<th className="border px-2 py-1">ID</th>
+									<th className="border px-2 py-1">Object ID</th>
 									<th className="border px-2 py-1">Actions</th>
 								</tr>
 							</thead>
 							<tbody>
 								{filteredEmpires.map((empire) => (
-									<tr key={empire.id} className="hover:bg-gray-50">
-										<td className="border px-2 py-1">{empire.empire_name}</td>
+									<tr key={empire.objectId} className="hover:bg-gray-50">
+										<td className="border px-2 py-1">{empire.empireName}</td>
 										<td className="border px-2 py-1">
-											{empire.start_year?.year} {empire.start_year?.era}
+											{empire.startYear?.year} {empire.startYear?.era}
 										</td>
 										<td className="border px-2 py-1">
-											{empire.end_year?.year} {empire.end_year?.era}
+											{empire.endYear?.year} {empire.endYear?.era}
 										</td>
-										<td className="border px-2 py-1">{empire.object_id}</td>
+										<td className="border px-2 py-1">{empire.objectId}</td>
 										<td className="border px-2 py-1 space-x-2">
 											<button
 												onClick={() => setSelectedGeoJSON(empire.content)}
@@ -178,7 +178,7 @@ const EmpireList = ({ onSelect }) => {
 												</button>
 											</Link>
 											<button
-												onClick={() => handleDelete(empire.object_id)}
+												onClick={() => handleDelete(empire.objectId)}
 												className="text-red-600 hover:underline"
 											>
 												Delete

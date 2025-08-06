@@ -83,9 +83,9 @@ function EmpireForm({ onSubmit, isEditing = false, initialData }) {
 		}
 
 		const formData = {
-			empire_name: empireName,
-			start_year: { year: parseInt(startYear.year), era: startYear.era },
-			end_year: { year: parseInt(endYear.year), era: endYear.era },
+			empireName: empireName,
+			startYear: { year: parseInt(startYear.year), era: startYear.era },
+			endYear: { year: parseInt(endYear.year), era: endYear.era },
 			content: parsedContent,
 		};
 
