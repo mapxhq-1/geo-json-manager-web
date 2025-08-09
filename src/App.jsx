@@ -35,7 +35,7 @@ function App() {
 				<div className="max-w-6xl mx-auto p-4">
 					<nav className="flex gap-4 mb-6 border-b pb-2">
 						<Link
-							to="*"
+							to="/form"
 							className="text-blue-600 hover:underline font-semibold"
 						>
 							Empire Form
@@ -50,12 +50,13 @@ function App() {
 
 					<Routes>
 						<Route
-							path="*"
+							path="/form"
 							element={
 								<EmpireForm
 									onSubmit={handleFormSubmit}
 									initialData={selectedEmpire}
 									isEditing={Boolean(selectedEmpire)}
+									onFinishEditing={() => setSelectedEmpire(null)}
 								/>
 							}
 						/>
