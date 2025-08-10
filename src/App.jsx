@@ -93,7 +93,7 @@ function AppLayout({ children }) {
 						Empire List
 					</Link>
 					<div className="ml-auto pr-5">
-						<Link to="*">
+						<Link to="/login">
 							<button
 								onClick={() => logout()}
 								className="text-red-600 hover:text-red-800 font-semibold underline-offset-4 hover:underline transition-colors"
