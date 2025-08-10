@@ -7,8 +7,6 @@ function EmpireForm({
 	initialData,
 	onFinishEditing,
 }) {
-	// console.log(initialData);
-	// console.log(isEditing);
 	const [empireName, setEmpireName] = useState("");
 	const [startYear, setStartYear] = useState({ year: "", era: "BCE" });
 	const [endYear, setEndYear] = useState({ year: "", era: "BCE" });
@@ -97,11 +95,7 @@ function EmpireForm({
 		};
 
 		try {
-			console.log("update api active ");
-			console.log(formData);
 			if (isEditing && initialData?.objectId) {
-				console.log(isEditing);
-				console.log(initialData?.objectId);
 				const res = await fetch(`${baseUrl}/geo-json-service/update`, {
 					method: "PATCH",
 					headers: { "Content-Type": "application/json" },
@@ -116,7 +110,6 @@ function EmpireForm({
 					onFinishEditing();
 				}
 			} else {
-				console.log("update api inactive ");
 				onSubmit(formData);
 			}
 

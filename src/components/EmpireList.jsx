@@ -15,7 +15,6 @@ const EmpireList = ({ onSelect }) => {
 				`${baseUrl}/geo-json-service/get-empire-details-by-id/${id}`
 			);
 			const data = await res.json();
-			// console.log(data);
 			setSelectedGeoJSON(data.content);
 		} catch {
 			alert("Failed to fetch GoJsonContent");
@@ -28,7 +27,6 @@ const EmpireList = ({ onSelect }) => {
 				`${baseUrl}/geo-json-service/get-empire-details-by-id/${id}`
 			);
 			const data = await res.json();
-			// console.log(data);
 			onSelect(data);
 		} catch {
 			alert("Failed to update data");
