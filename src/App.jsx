@@ -1,16 +1,19 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 import EmpireForm from "./components/EmpireForm";
 import EmpireList from "./components/EmpireList";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Login from "./components/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
+	const [selectedEmpire, setSelectedEmpire] = useState(null);
+
 	const handleFormSubmit = async (data) => {
 		console.log("Form submitted with:", data);
 		try {
+			const creds = JSON.parse(localStorage.getItem("geojson_creds"));
 			const response = await fetch(`${baseUrl}/geo-json-service/upload`, {
 				method: "POST",
 				headers: {
@@ -26,8 +29,6 @@ function App() {
 			console.error("Error uploading empire:", error);
 		}
 	};
-
-	const [selectedEmpire, setSelectedEmpire] = useState(null);
 
 	return (
 		<>
@@ -52,19 +53,26 @@ function App() {
 						<Route
 							path="/form"
 							element={
-								<EmpireForm
-									onSubmit={handleFormSubmit}
-									initialData={selectedEmpire}
-									isEditing={Boolean(selectedEmpire)}
-									onFinishEditing={() => setSelectedEmpire(null)}
-								/>
+								<ProtectedRoute>
+									<EmpireForm
+										onSubmit={handleFormSubmit}
+										initialData={selectedEmpire}
+										isEditing={Boolean(selectedEmpire)}
+										onFinishEditing={() => setSelectedEmpire(null)}
+									/>
+								</ProtectedRoute>
 							}
 						/>
 						<Route
 							path="/list"
-							element={<EmpireList onSelect={setSelectedEmpire} />}
+							element={
+								<ProtectedRoute>
+									<EmpireList onSelect={setSelectedEmpire} />
+								</ProtectedRoute>
+							}
 						/>
 						{/* <Route path="*" element={<p>404 Not Found</p>} /> */}
+						<Route path="*" element={<Login />} />
 					</Routes>
 				</div>
 			</Router>
