@@ -16,5 +16,6 @@ export const validateStoredCreds = async (baseUrl) => {
 };
 
 export const logout = () => {
+	console.log(logout);
 	localStorage.removeItem("geojson_creds");
 };
