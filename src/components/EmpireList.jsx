@@ -50,6 +50,7 @@ const EmpireList = ({ onSelect }) => {
 	}, []);
 
 	const handleFilterChange = (e) => {
+		console.log(e.target);
 		const { name, value } = e.target;
 		setFilters((prev) => ({ ...prev, [name]: value }));
 	};
@@ -57,14 +58,17 @@ const EmpireList = ({ onSelect }) => {
 	const filteredEmpires = empires.filter((empire) => {
 		const nameMatch = (empire.empireName || "")
 			.toLowerCase()
-			.includes(filters.name.toLowerCase());
+
+			.includes(filters.name.toLowerCase().trim());
 
 		const filterYear = filters.year.trim();
 		let yearMatch = true;
 		if (filterYear !== "") {
-			const startYearNum = empire.startYear?.year ?? null;
-			const endYearNum = empire.endYear?.year ?? null;
-			yearMatch = startYearNum == filterYear || endYearNum == filterYear;
+			const startYearStr = empire.startYear?.year?.toString() ?? "";
+			const endYearStr = empire.endYear?.year?.toString() ?? "";
+			yearMatch =
+				startYearStr.startsWith(filterYear) ||
+				endYearStr.startsWith(filterYear);
 		}
 
 		const filterEra = filters.era.trim();
