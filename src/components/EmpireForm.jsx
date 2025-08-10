@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
-function EmpireForm({ onSubmit, isEditing = false, initialData }) {
+function EmpireForm({
+	onSubmit,
+	isEditing = false,
+	initialData,
+	onFinishEditing,
+}) {
+	// console.log(initialData);
+	// console.log(isEditing);
 	const [empireName, setEmpireName] = useState("");
 	const [startYear, setStartYear] = useState({ year: "", era: "BCE" });
 	const [endYear, setEndYear] = useState({ year: "", era: "BCE" });
@@ -13,14 +20,14 @@ function EmpireForm({ onSubmit, isEditing = false, initialData }) {
 
 	useEffect(() => {
 		if (isEditing && initialData) {
-			setEmpireName(initialData.empire_name || "");
+			setEmpireName(initialData.empireName || "");
 			setStartYear({
-				year: initialData.start_year?.year || "",
-				era: initialData.start_year?.era || "BCE",
+				year: initialData.startYear?.year || "",
+				era: initialData.startYear?.era || "BCE",
 			});
 			setEndYear({
-				year: initialData.end_year?.year || "",
-				era: initialData.end_year?.era || "BCE",
+				year: initialData.endYear?.year || "",
+				era: initialData.endYear?.era || "BCE",
 			});
 			setContent(
 				initialData.content ? JSON.stringify(initialData.content, null, 2) : ""
@@ -90,19 +97,26 @@ function EmpireForm({ onSubmit, isEditing = false, initialData }) {
 		};
 
 		try {
+			console.log("update api active ");
 			console.log(formData);
-			if (isEditing && initialData?.object_id) {
+			if (isEditing && initialData?.objectId) {
+				console.log(isEditing);
+				console.log(initialData?.objectId);
 				const res = await fetch(`${baseUrl}/geo-json-service/update`, {
-					method: "PUT",
+					method: "PATCH",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						...formData,
-						object_id: initialData.object_id,
+						objectId: initialData.objectId,
 					}),
 				});
 				const result = await res.json();
 				alert(result.status || "Empire updated successfully!");
+				if (onFinishEditing) {
+					onFinishEditing();
+				}
 			} else {
+				console.log("update api inactive ");
 				onSubmit(formData);
 			}
 

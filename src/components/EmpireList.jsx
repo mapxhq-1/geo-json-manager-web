@@ -9,6 +9,32 @@ const EmpireList = ({ onSelect }) => {
 
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
+	const fetchGeoJsonContent = async (id) => {
+		try {
+			const res = await fetch(
+				`${baseUrl}/geo-json-service/get-empire-details-by-id/${id}`
+			);
+			const data = await res.json();
+			// console.log(data);
+			setSelectedGeoJSON(data.content);
+		} catch {
+			alert("Failed to fetch GoJsonContent");
+		}
+	};
+
+	const updatedFormData = async (id) => {
+		try {
+			const res = await fetch(
+				`${baseUrl}/geo-json-service/get-empire-details-by-id/${id}`
+			);
+			const data = await res.json();
+			// console.log(data);
+			onSelect(data);
+		} catch {
+			alert("Failed to update data");
+		}
+	};
+
 	const fetchEmpires = async () => {
 		setLoading(true);
 		try {
@@ -31,23 +57,23 @@ const EmpireList = ({ onSelect }) => {
 	};
 
 	const filteredEmpires = empires.filter((empire) => {
-		const nameMatch = (empire.empire_name || "")
+		const nameMatch = (empire.empireName || "")
 			.toLowerCase()
 			.includes(filters.name.toLowerCase());
 
 		const filterYear = filters.year.trim();
 		let yearMatch = true;
 		if (filterYear !== "") {
-			const startYearNum = empire.start_year?.year ?? null;
-			const endYearNum = empire.end_year?.year ?? null;
+			const startYearNum = empire.startYear?.year ?? null;
+			const endYearNum = empire.endYear?.year ?? null;
 			yearMatch = startYearNum == filterYear || endYearNum == filterYear;
 		}
 
 		const filterEra = filters.era.trim();
 		let eraMatch = true;
 		if (filterEra !== "") {
-			const startEra = empire.start_year?.era ?? "";
-			const endEra = empire.end_year?.era ?? "";
+			const startEra = empire.startYear?.era ?? "";
+			const endEra = empire.endYear?.era ?? "";
 			eraMatch = startEra === filterEra || endEra === filterEra;
 		}
 
@@ -164,14 +190,16 @@ const EmpireList = ({ onSelect }) => {
 										<td className="border px-2 py-1">{empire.objectId}</td>
 										<td className="border px-2 py-1 space-x-2">
 											<button
-												onClick={() => setSelectedGeoJSON(empire.content)}
+												onClick={() => {
+													fetchGeoJsonContent(empire.objectId);
+												}}
 												className="text-blue-600 hover:underline"
 											>
 												View
 											</button>
 											<Link to="/form">
 												<button
-													onClick={() => onSelect(empire)}
+													onClick={() => updatedFormData(empire.objectId)}
 													className="text-green-600 hover:underline"
 												>
 													Edit
