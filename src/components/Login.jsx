@@ -1,6 +1,7 @@
 // src/components/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import mapDeskLogo from "../assets/map-desk-logo.jpg";
 
 function Login() {
 	const [username, setUsername] = useState("");
@@ -51,7 +52,15 @@ function Login() {
 
 	return (
 		<div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
-			<h2 className="text-2xl font-bold mb-4">Login</h2>
+			<div className="flex items-center justify-center mb-6 text-blue-600">
+				<img
+					src={mapDeskLogo}
+					alt="Map Desk Logo"
+					className="w-12 h-12 mr-2 rounded-full object-cover"
+				/>
+				<h1 className="text-3xl font-bold">Map Desk Login</h1>
+			</div>
+			{/* <h2 className="text-2xl font-bold mb-4">Login</h2> */}
 			{error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 			<form onSubmit={handleSubmit} className="space-y-4">
 				<input
