@@ -12,6 +12,7 @@ import EmpireList from "./components/EmpireList";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { logout } from "./utils/auth";
+import MetadataPath from "./components/MetadataPath";
 
 function App() {
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -62,6 +63,14 @@ function App() {
 							</ProtectedRoute>
 						}
 					/>
+					<Route
+						path="/metadata_path"
+						element={
+							<ProtectedRoute>
+								<MetadataPath />
+							</ProtectedRoute>
+						}
+					/>
 					<Route path="*" element={<Login />} />
 				</Routes>
 			</AppLayout>
@@ -72,7 +81,7 @@ function App() {
 function AppLayout({ children }) {
 	const location = useLocation();
 	const hideNav =
-		location.pathname === "/form" || location.pathname === "/list";
+		location.pathname === "/form" || location.pathname === "/list" || location.pathname === "/metadata_path" || location.pathname === "/metadata_list";
 	// ||
 	// location.pathname === "/login";
 
@@ -92,6 +101,18 @@ function AppLayout({ children }) {
 					>
 						Empire List
 					</Link>
+					<Link
+						to="/metadata_path"
+						className="text-blue-600 hover:underline font-semibold"
+					>
+						Metadata Form
+					</Link>
+					{/* <Link
+						to="/metadata_list"
+						className="text-blue-600 hover:underline font-semibold"
+					>
+						Metadata List
+					</Link> */}
 					<div className="ml-auto pr-5">
 						<Link to="/login">
 							<button
