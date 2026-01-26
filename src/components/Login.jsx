@@ -53,7 +53,7 @@ function Login() {
 	return (
 		<div>
 		<h1 style={{ fontSize: "2em", fontWeight: "bold", textDecoration: "underline" }}> Mapdesk </h1>
-		<span>Created by Mapx</span>		
+		<span>Created by Happy Dyno</span>		
   		<div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
 			<div className="flex items-center justify-center mb-6 text-blue-600">
 				<img
@@ -90,7 +90,7 @@ function Login() {
 		</div>
 			&nbsp;&nbsp;
 			<div style={{ textAlign: "center", marginTop: "20px", fontSize: "0.9em", color: "#666" }}>
-				<b><i>&copy; {new Date().getFullYear()} Mapx. All rights reserved.</i></b>
+				<b><i>&copy; {new Date().getFullYear()} Happy Dyno. All rights reserved.</i></b>
 			</div>
 		</div>
 	);
