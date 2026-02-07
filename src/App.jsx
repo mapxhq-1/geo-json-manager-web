@@ -9,6 +9,8 @@ import {
 import "./App.css";
 import EmpireForm from "./components/EmpireForm";
 import EmpireList from "./components/EmpireList";
+import LayersForm from "./components/LayersForm";
+import LayersList from "./components/LayersList";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { logout } from "./utils/auth";
@@ -17,6 +19,7 @@ import MetadataPath from "./components/MetadataPath";
 function App() {
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 	const [selectedEmpire, setSelectedEmpire] = useState(null);
+	const [selectedLayer, setSelectedLayer] = useState(null);
 
 	const handleFormSubmit = async (data) => {
 		// console.log("Form submitted with:", data);
@@ -64,6 +67,27 @@ function App() {
 						}
 					/>
 					<Route
+						path="/layers_form"
+						element={
+							<ProtectedRoute>
+								<LayersForm
+									onSubmit={() => {}}
+									initialData={selectedLayer}
+									isEditing={Boolean(selectedLayer)}
+									onFinishEditing={() => setSelectedLayer(null)}
+								/>
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/layers"
+						element={
+							<ProtectedRoute>
+								<LayersList onSelect={setSelectedLayer} />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
 						path="/metadata_path"
 						element={
 							<ProtectedRoute>
@@ -81,14 +105,17 @@ function App() {
 function AppLayout({ children }) {
 	const location = useLocation();
 	const hideNav =
-		location.pathname === "/form" || location.pathname === "/list" || location.pathname === "/metadata_path" || location.pathname === "/metadata_list";
-	// ||
-	// location.pathname === "/login";
+		location.pathname === "/form" || 
+		location.pathname === "/list" || 
+		location.pathname === "/layers_form" || 
+		location.pathname === "/layers" || 
+		location.pathname === "/metadata_path" || 
+		location.pathname === "/metadata_list";
 
 	return (
 		<div className="max-w-6xl mx-auto p-4">
 			{hideNav && (
-				<nav className="flex gap-4 mb-6 border-b pb-2">
+				<nav className="flex gap-4 mb-6 border-b pb-2 flex-wrap">
 					<Link
 						to="/form"
 						className="text-blue-600 hover:underline font-semibold"
@@ -107,12 +134,19 @@ function AppLayout({ children }) {
 					>
 						Metadata Form
 					</Link>
-					{/* <Link
-						to="/metadata_list"
+					<Link
+						to="/layers_form"
 						className="text-blue-600 hover:underline font-semibold"
 					>
-						Metadata List
-					</Link> */}
+						Layers Form
+					</Link>
+					<Link
+						to="/layers"
+						className="text-blue-600 hover:underline font-semibold"
+					>
+						Layers List
+					</Link>
+		
 					<div className="ml-auto pr-5">
 						<Link to="/login">
 							<button
