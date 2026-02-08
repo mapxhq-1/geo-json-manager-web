@@ -70,17 +70,22 @@ const LayersList = ({ onSelect }) => {
 	});
 
 	const handleViewGeoJSON = async (layer) => {
+		const geoJsonFileId = layer.storageFileId ?? layer.geoJsonFileId;
+		if (!geoJsonFileId) {
+			alert("Layer has no geo file ID. Cannot load details.");
+			return;
+		}
 		setViewLoading(true);
 		setViewerLayer(null);
 		try {
 			const params = new URLSearchParams();
-			if (layer.layerName) params.set("layerName", layer.layerName);
-			if (layer.layerType) params.set("layerType", layer.layerType);
+			params.set("geoJsonFileId", geoJsonFileId);
+			const metadataFileId = layer.layerMetadataFileId ?? layer.metadataFileId ?? "";
+			if (metadataFileId) params.set("metadataFileId", metadataFileId);
+
 			const res = await fetch(
-				`${baseUrl}/geo-json-service/search_geo_layers?${params.toString()}`,
-				{
-					headers: { "client_name": clientName },
-				}
+				`${baseUrl}/geo-json-service/fetch-layer-files?${params.toString()}`,
+				{ headers: { "client_name": clientName } }
 			);
 			const contentType = res.headers.get("content-type") || "";
 			if (!contentType.includes("application/json")) {
@@ -91,17 +96,19 @@ const LayersList = ({ onSelect }) => {
 			try {
 				data = await res.json();
 			} catch (parseErr) {
-				// Backend often returns invalid JSON when metadataContent is plain text (e.g. .txt) and not sent as a quoted string
-				alert(
-					"Server returned invalid JSON. If layer metadata is plain text (.txt), the backend must send it as a quoted JSON string (e.g. metadataContent: \"your text here\")."
-				);
+				alert("Server returned invalid JSON.");
 				return;
 			}
-			if (data.status === "success" && Array.isArray(data.response) && data.response.length > 0) {
-				const match = data.response.find((l) => l.id === layer.id) ?? data.response[0];
-				setViewerLayer(match);
+			if (data.status === "success" && data.response != null) {
+				setViewerLayer({
+					id: layer.id,
+					layerName: layer.layerName,
+					layerType: layer.layerType,
+					geoFileContent: data.response.geoFileContent,
+					metadataContent: data.response.metadataContent,
+				});
 			} else {
-				alert(data.message || "No layer details found.");
+				alert(data.message || "Could not load layer files.");
 			}
 		} catch (err) {
 			console.error(err);
