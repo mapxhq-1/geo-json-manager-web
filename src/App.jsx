@@ -15,7 +15,7 @@ import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { logout } from "./utils/auth";
 import MetadataPath from "./components/MetadataPath";
-
+import Scrapper from "./components/scrapper/Scrapper";
 function App() {
 	const baseUrl = import.meta.env.VITE_API_BASE_URL;
 	const [selectedEmpire, setSelectedEmpire] = useState(null);
@@ -95,6 +95,14 @@ function App() {
 							</ProtectedRoute>
 						}
 					/>
+					<Route
+						path="/scrapper"
+						element={
+							<ProtectedRoute>
+								<Scrapper />
+							</ProtectedRoute>
+						}
+					/>
 					<Route path="*" element={<Login />} />
 				</Routes>
 			</AppLayout>
@@ -110,7 +118,8 @@ function AppLayout({ children }) {
 		location.pathname === "/layers_form" || 
 		location.pathname === "/layers" || 
 		location.pathname === "/metadata_path" || 
-		location.pathname === "/metadata_list";
+		location.pathname === "/metadata_list" ||
+		location.pathname === "/scrapper";
 
 	return (
 		<div className="max-w-6xl mx-auto p-4">
@@ -147,6 +156,12 @@ function AppLayout({ children }) {
 						Layers List
 					</Link>
 		
+					<Link
+						to="/scrapper"
+						className="text-blue-600 hover:underline font-semibold"
+					>
+						Scrapper
+					</Link>
 					<div className="ml-auto pr-5">
 						<Link to="/login">
 							<button
