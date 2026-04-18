@@ -155,7 +155,7 @@ const EmpireList = ({ onSelect }) => {
 						<pre className="text-sm bg-white p-2 border rounded flex-1 overflow-auto">
 							{JSON.stringify(
 								typeof selectedGeoJSON === "string"
-									? JSON.parse(selectedGeoJSON)
+									? JSON.parse(atob(selectedGeoJSON))
 									: selectedGeoJSON,
 								null,
 								2
