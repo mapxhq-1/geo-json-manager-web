@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from 'axios';
+import { List } from 'react-window';
+
 //Redeploy
 // --- CONSTANTS: YOUR DEFAULT FIELDS ---
 const DEFAULT_KEYS = [
@@ -78,6 +80,62 @@ function KeyValueEditor({ pairs, onAdd, onRemove, onChange }) {
     </div>
   );
 }
+
+// --- VIRTUALIZED ROW COMPONENT ---
+// Defined outside the main component so it doesn't re-render needlessly
+const VirtualizedRow = ({ index, style, data }) => {
+  const { list, mode, selected, onToggle, onView, onDelete } = data;
+  const e = list[index];
+
+  return (
+    <div style={style} className="px-2 py-1">
+      {mode === "add" ? (
+        <label
+          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition h-full ${
+            selected.includes(e.objectId)
+              ? "border-blue-300 bg-blue-50/80"
+              : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+          }`}
+        >
+          <input
+            type="checkbox"
+            value={e.objectId}
+            onChange={onToggle}
+            checked={selected.includes(e.objectId)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-gray-800 truncate">{e.empireName}</span>
+            <span className="text-xs font-mono text-gray-500 truncate select-all">{e.objectId}</span>
+          </div>
+        </label>
+      ) : (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 hover:border-gray-300 h-full">
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-gray-800 truncate">{e.empireName}</span>
+            <span className="text-xs font-mono text-gray-500 truncate select-all">{e.objectId}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              className="rounded-lg bg-blue-50 text-blue-700 px-3 py-1.5 text-sm font-medium hover:bg-blue-100 border border-blue-100 transition"
+              onClick={() => onView(e.objectId)}
+            >
+              View / Edit
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-red-50 text-red-700 px-3 py-1.5 text-sm font-medium hover:bg-red-100 border border-red-100 transition"
+              onClick={() => onDelete(e.objectId)}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function MetadataPath() {
   const [empires, setEmpires] = useState([]);
@@ -455,6 +513,9 @@ function MetadataPath() {
   const addedEmpires = empires.filter((e) =>
     e.empireName.toLowerCase().includes(search.toLowerCase()) && Object.keys(list).includes(e.objectId)
   );
+  
+  // This is the active list passed down to react-window
+  const activeList = add === "add" ? filteredEmpires : addedEmpires;
 
   useEffect(() => {
     fetchEmpires();
@@ -546,67 +607,34 @@ function MetadataPath() {
                 <span className="font-medium text-blue-600">{selectedEmpire.length}</span> selected — choose &quot;Create Table&quot; or &quot;Upload JSON&quot; below.
               </p>
             )}
+            
+            {/* VIRTUALIZED LIST CONTAINER */}
             <div className="flex gap-3">
-              <div className="flex-1 h-[19.5rem] overflow-y-auto overflow-x-hidden rounded-lg border border-gray-200 bg-gray-50/30 py-2 px-2 scroll-smooth space-y-2" style={{ scrollbarGutter: "stable" }}>
-                {add === "add" ? (
-                  filteredEmpires.map((e) => (
-                    <label
-                      key={e.objectId}
-                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition ${
-                        selectedEmpire.includes(e.objectId)
-                          ? "border-blue-300 bg-blue-50/80"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value={e.objectId}
-                        onChange={handleCheckbox}
-                        checked={selectedEmpire.includes(e.objectId)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-gray-800 truncate">{e.empireName}</span>
-                        <span className="text-xs font-mono text-gray-500 truncate select-all">{e.objectId}</span>
-                      </div>
-                    </label>
-                  ))
-                ) : (
-                  addedEmpires.map((e) => (
-                    <div
-                      key={e.objectId}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 hover:border-gray-300"
-                    >
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-gray-800 truncate">{e.empireName}</span>
-                        <span className="text-xs font-mono text-gray-500 truncate select-all">{e.objectId}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          className="rounded-lg bg-blue-50 text-blue-700 px-3 py-1.5 text-sm font-medium hover:bg-blue-100 border border-blue-100 transition"
-                          onClick={() => viewMetadata(e.objectId)}
-                        >
-                          View / Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-lg bg-red-50 text-red-700 px-3 py-1.5 text-sm font-medium hover:bg-red-100 border border-red-100 transition"
-                          onClick={() => deleteMetadata(e.objectId)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-                {(add === "add" ? filteredEmpires : addedEmpires).length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+              <div className="flex-1 h-[19.5rem] rounded-lg border border-gray-200 bg-gray-50/30 overflow-hidden">
+                {activeList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <p className="text-sm">No empires found</p>
                   </div>
+                ) : (
+                  <List
+                    height={312} // 19.5rem
+                    itemCount={activeList.length}
+                    itemSize={72} // Height of each row + padding
+                    width="100%"
+                    itemData={{
+                      list: activeList,
+                      mode: add,
+                      selected: selectedEmpire,
+                      onToggle: handleCheckbox,
+                      onView: viewMetadata,
+                      onDelete: deleteMetadata
+                    }}
+                  >
+                    {VirtualizedRow}
+                  </List>
                 )}
               </div>
               <div className="flex flex-col items-center justify-center text-gray-400 py-4 shrink-0" title="List is scrollable">
