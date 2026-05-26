@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from 'axios';
 import { List } from 'react-window';
+import { useEmpires } from '../context/EmpireContext'; // Adjust path if your context is located elsewhere
 
-//Redeploy
 // --- CONSTANTS: YOUR DEFAULT FIELDS ---
 const DEFAULT_KEYS = [
   "empireName",
@@ -81,10 +81,8 @@ function KeyValueEditor({ pairs, onAdd, onRemove, onChange }) {
   );
 }
 
-// --- VIRTUALIZED ROW COMPONENT ---
-// Defined outside the main component so it doesn't re-render needlessly
-const VirtualizedRow = ({ index, style, data }) => {
-  const { list, mode, selected, onToggle, onView, onDelete } = data;
+// --- VIRTUALIZED ROW COMPONENT (react-window v2) ---
+const VirtualizedRow = ({ index, style, list, mode, selected, onToggle, onView, onDelete }) => {
   const e = list[index];
 
   return (
@@ -138,7 +136,9 @@ const VirtualizedRow = ({ index, style, data }) => {
 };
 
 function MetadataPath() {
-  const [empires, setEmpires] = useState([]);
+  // Pull from our new EmpireContext!
+  const { empires, refreshEmpires } = useEmpires();
+  
   const [imageList, setImageList] = useState([]); 
   const [imagePreview, setImagePreview] = useState([]); 
   
@@ -149,7 +149,7 @@ function MetadataPath() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState(""); 
 
-  const [list, setList] = useState([]); 
+  const [list, setList] = useState({}); // Defaulting to empty object to prevent crashes
   const [add, setAdd] = useState("add"); 
   
   // View/Modal State
@@ -159,14 +159,14 @@ function MetadataPath() {
   
   const [currentMetaId, setCurrentMetaId] = useState(null);
   
-  // --- KEY-VALUE EDITOR STATE (Initialized with Default Rows) ---
+  // --- KEY-VALUE EDITOR STATE ---
   const [keyValuePairs, setKeyValuePairs] = useState(getInitialRows());
 
   const [updateImages, setUpdateImages] = useState([]); 
   const [newPreviews, setNewPreviews] = useState([]);   
   const [imagesToRemove, setImagesToRemove] = useState([]);
 
-  // JSON file path (textarea + file picker, like LayersForm)
+  // JSON file path
   const [jsonMetadataContent, setJsonMetadataContent] = useState("");
   const [jsonMetadataFile, setJsonMetadataFile] = useState(null); 
 
@@ -187,19 +187,6 @@ function MetadataPath() {
     setKeyValuePairs(list);
   };
 
-  const generateJSONFile = () => {
-    const dataObj = keyValuePairs.reduce((acc, curr) => {
-        if (curr.key.trim() !== "") {
-            acc[curr.key] = curr.value;
-        }
-        return acc;
-    }, {});
-    
-    const blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: "application/json" });
-    return new File([blob], "metadata.json", { type: "application/json" });
-  };
-
-  /** For Edit modal: only filled rows; parse JSON strings back to object/array for backend. */
   function buildUpdateDetailsFile() {
     const dataObj = {};
     keyValuePairs.forEach((p) => {
@@ -240,7 +227,7 @@ function MetadataPath() {
     }
   }
 
-  // --- CREATE TABLE ONLY: uses only table (keyValuePairs) + images. No JSON panel data. ---
+  // --- CREATE TABLE ONLY ---
   async function createMetadataFromTable() {
     setError("");
     setSuccessMsg("");
@@ -285,7 +272,7 @@ function MetadataPath() {
       setImageList([]);
       setImagePreview([]);
       setSelectedEmpire([]);
-      fetchEmpires();
+      refreshEmpires(); // Sync just in case
       getMetadata();
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
@@ -294,7 +281,7 @@ function MetadataPath() {
     }
   }
 
-  // --- UPLOAD JSON ONLY: uses only JSON panel (file or textarea). No table data. ---
+  // --- UPLOAD JSON ONLY ---
   async function uploadJsonMetadata() {
     setError("");
     setSuccessMsg("");
@@ -338,7 +325,7 @@ function MetadataPath() {
       setJsonMetadataContent("");
       setJsonMetadataFile(null);
       setSelectedEmpire([]);
-      fetchEmpires();
+      refreshEmpires();
       getMetadata();
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
@@ -384,7 +371,7 @@ function MetadataPath() {
       setSuccessMsg("Updated successfully.");
       closeModal();
       getMetadata(); 
-      fetchEmpires();
+      refreshEmpires();
       setTimeout(() => setSuccessMsg(""), 3000);
 
     } catch (err) {
@@ -409,23 +396,16 @@ function MetadataPath() {
     setNewPreviews(prev => prev.filter((_, i) => i !== index));
   }
 
-  async function fetchEmpires() {
-    try {
-      const res = await fetch(`${baseUrl}/geo-json-service/get-all-empires`);
-      const data = await res.json();
-      setEmpires(data);
-    } catch (err) {
-      console.log("Server error caused!!", err);
-    }
-  }
-
   async function getMetadata() {
     try {
-      const res = await fetch(`${baseUrl}/geo-json-service/get-all-empire-metadata-object-ids`, { headers: { client_name: "MapDesk" } });
+      const res = await fetch(`${baseUrl}/geo-json-service/get-all-empire-metadata-object-ids`, { headers: { client_name: "mapdesk" } });
+      if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
-      setList(data.response); 
+      setList(data.response || {}); 
     } catch (err) {
-      setError("Failed to fetch data!!");
+      console.error(err);
+      setError("Failed to fetch metadata ids!!");
+      setList({});
     }
   }
 
@@ -455,7 +435,6 @@ function MetadataPath() {
       setViewData(data);
       setCurrentMetaId(data.id); 
 
-      // --- LOAD ONLY WHAT'S STORED (no table defaults) so JSON-uploaded metadata stays JSON-only ---
       let loadedData = {};
       if (data.jsonMetadata) {
         let sourceObj = data.jsonMetadata;
@@ -490,7 +469,7 @@ function MetadataPath() {
     try{
       await axios.delete(`${baseUrl}/geo-json-service/delete_empire_metadata/${metaId}`,{headers:{client_name:"mapdesk"}})
       getMetadata(); 
-      fetchEmpires();
+      refreshEmpires();
       setSuccessMsg("Successfully deleted")
       setTimeout(() => setSuccessMsg(""), 3000);
 
@@ -506,19 +485,41 @@ function MetadataPath() {
     );
   }
 
-  const filteredEmpires = empires.filter((e) =>
-    e.empireName.toLowerCase().includes(search.toLowerCase()) && !Object.keys(list).includes(e.objectId)
-  );
+  // --- BULLETPROOF FILTERING LOGIC ---
+  const safeEmpires = Array.isArray(empires) ? empires : [];
+  const safeList = list || {};
+// 1. Calculate the search string ONCE outside the loop
+const lowerSearch = search.toLowerCase();
 
-  const addedEmpires = empires.filter((e) =>
-    e.empireName.toLowerCase().includes(search.toLowerCase()) && Object.keys(list).includes(e.objectId)
-  );
+// 2. Memoize and use direct object lookups (Instantaneous)
+const filteredEmpires = useMemo(() => {
+  if (!safeEmpires.length) return [];
   
-  // This is the active list passed down to react-window
+  return safeEmpires.filter((e) => {
+    // Direct object lookup: Is this ID in the list object?
+    const hasMetadata = safeList[e.objectId] !== undefined;
+    if (hasMetadata) return false; // Skip immediately if it's already managed
+
+    return e.empireName?.toLowerCase().includes(lowerSearch);
+  });
+}, [safeEmpires, safeList, lowerSearch]);
+
+const addedEmpires = useMemo(() => {
+  if (!safeEmpires.length) return [];
+
+  return safeEmpires.filter((e) => {
+    // Direct object lookup
+    const hasMetadata = safeList[e.objectId] !== undefined;
+    if (!hasMetadata) return false; // Skip immediately if it's NOT managed
+
+    return e.empireName?.toLowerCase().includes(lowerSearch);
+  });
+}, [safeEmpires, safeList, lowerSearch]);
   const activeList = add === "add" ? filteredEmpires : addedEmpires;
 
   useEffect(() => {
-    fetchEmpires();
+    // We only need to fetch metadata mapping IDs here now. 
+    // The context automatically fetches the empires array for us.
     getMetadata();
   }, []);
 
@@ -555,7 +556,6 @@ function MetadataPath() {
     setModalImages([]);
     setNewPreviews([]);
     setUpdateImages([]);
-    // Reset to default blank rows
     setKeyValuePairs(getInitialRows()); 
   }
 
@@ -620,11 +620,10 @@ function MetadataPath() {
                   </div>
                 ) : (
                   <List
-                    height={312} // 19.5rem
-                    itemCount={activeList.length}
-                    itemSize={72} // Height of each row + padding
-                    width="100%"
-                    itemData={{
+                    rowCount={activeList.length}
+                    rowHeight={72} 
+                    rowComponent={VirtualizedRow}
+                    rowProps={{
                       list: activeList,
                       mode: add,
                       selected: selectedEmpire,
@@ -632,9 +631,7 @@ function MetadataPath() {
                       onView: viewMetadata,
                       onDelete: deleteMetadata
                     }}
-                  >
-                    {VirtualizedRow}
-                  </List>
+                  />
                 )}
               </div>
               <div className="flex flex-col items-center justify-center text-gray-400 py-4 shrink-0" title="List is scrollable">
